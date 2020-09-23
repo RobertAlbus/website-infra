@@ -8,6 +8,7 @@ import * as s3 from '@aws-cdk/aws-s3';
 import { S3WebsiteBucket } from './base/buckets';
 import { CodeBuildProject } from './base/build';
 import { CloudfrontForS3 } from './base/cdn';
+import { SecretValue } from '@aws-cdk/core';
 
 
 
@@ -105,6 +106,11 @@ export class StaticHostingStack extends cdk.Stack {
       webhook: true,
       webhookFilters: webhooks,
       reportBuildStatus: true,
+    });
+
+    const githubAccessToken = SecretValue.secretsManager('Robert-Albus-Github-PAC');
+    const credentials = new codebuild.GitHubSourceCredentials(this, `${id}-github-source-creds`, {
+      accessToken: githubAccessToken
     });
 
     const project = new codebuild.Project(this, `${id}-build`, {
