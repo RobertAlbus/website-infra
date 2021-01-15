@@ -1,18 +1,47 @@
 #!/usr/bin/env node
-import 'source-map-support/register';
-import * as cdk from '@aws-cdk/core';
-import { StaticHostingStack, StaticHostingStackProps } from '../lib/staticHostingWithGithubIntegration';
+import "source-map-support/register";
+import * as cdk from "@aws-cdk/core";
+import {
+  StaticHostingStack,
+  StaticHostingStackProps,
+} from "../lib/StaticHosting";
+import { Construct } from "@aws-cdk/core";
 
 const app = new cdk.App();
 
-const props: StaticHostingStackProps = {
-    websiteName: "robertalbus.com",
-    domainName: "robertalbus.com",
-    rootDocument: "index.html",
-    errorDocument: "index.html",
-    buildBranch: "main",
-    repoName: "website",
-    repoOwner: "RobertAlbus",
-    buildSpecFileLocation: "buildspec.yaml"
+const prod: StaticHostingStackProps = {
+  websiteName: "robertalbus.com",
+  domainName: "robertalbus.com",
+  rootDocument: "index.html",
+  errorDocument: "index.html",
+  buildBranch: "main",
+  repoName: "prod-robertalbus",
+  repoOwner: "RobertAlbus",
+  buildSpecFileLocation: "buildspec.yaml",
+  GithubKeySecretARN:
+    "arn:aws:secretsmanager:us-east-1:263625651715:secret:Robert-Albus-Github-PAC-J3mi8V",
 };
-new StaticHostingStack(app, 'WebsiteInfraStack', props);
+
+const dev: StaticHostingStackProps = {
+  websiteName: "robertalbus.com",
+  domainName: "robertalbus.com",
+  rootDocument: "index.html",
+  errorDocument: "index.html",
+  buildBranch: "main",
+  repoName: "dev-robertalbus",
+  repoOwner: "RobertAlbus",
+  buildSpecFileLocation: "buildspec.yaml",
+  GithubKeySecretARN:
+    "arn:aws:secretsmanager:us-east-1:263625651715:secret:Robert-Albus-Github-PAC-J3mi8V",
+};
+
+class RobertAlbusWebsiteInfraStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: StaticHostingStackProps) {
+    super(scope, id, undefined);
+
+    new StaticHostingStack(this, id, props);
+  }
+}
+
+new RobertAlbusWebsiteInfraStack(app, "RobertAlbus-prod", prod);
+new RobertAlbusWebsiteInfraStack(app, "RobertAlbus-dev", dev);
