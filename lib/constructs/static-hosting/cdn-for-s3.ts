@@ -22,7 +22,7 @@ export class BucketCdn extends Construct {
     props.bucket =
       props.bucket || new WebsiteBucket(scope, "bucket", {}).bucket;
 
-    const cloudFrontOAI = new OriginAccessIdentity(this, `${id}-cdn-OAI`, {
+    const cloudFrontOAI = new OriginAccessIdentity(this, `cdn-OAI`, {
       comment: `OAI for ${id}.`,
     });
 
@@ -46,7 +46,7 @@ export class BucketCdn extends Construct {
 
     this.distribution = new CloudFrontWebDistribution(
       this,
-      `${id}-cdn`,
+      `cdn`,
       cloudFrontDistProps
     );
 
