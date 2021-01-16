@@ -27,8 +27,8 @@ const dev: StaticWebsiteProps = {
   bucketRemovalPolicy: RemovalPolicy.DESTROY,
 };
 
-new StaticWebsite(app, "robertalbuscom-prod", prod);
-new StaticWebsite(app, "robertalbuscom-dev", dev);
+new StaticWebsite(app, "com-prod", prod);
+new StaticWebsite(app, "com-dev", dev);
 
-new StaticWebsite(app, "robertalbusresume-prod", prod);
-new StaticWebsite(app, "robertalbusresume-dev", dev);
+new StaticWebsite(app, "resume-prod", prod);
+new StaticWebsite(app, "resume-dev", dev);

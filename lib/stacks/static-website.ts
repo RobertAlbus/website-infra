@@ -40,7 +40,7 @@ export class StaticWebsite extends Stack {
 
     // Pipeline
 
-    new BucketPipeline(this, "pipeline", {
+    new BucketPipeline(this, "CICD", {
       devBranch: props.devBranch,
       prodBranch: props.prodBranch,
       buildSpecFileLocation: props.buildSpecFileLocation,

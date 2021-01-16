@@ -111,7 +111,7 @@ export class BucketPipeline extends Construct {
 
     // PIPELINE
 
-    const pipeline = new Pipeline(this, `${id}-pipeline`, {
+    const pipeline = new Pipeline(this, "pipeline", {
       stages: [SourceAction, BuildAction, deployAction],
     });
 
