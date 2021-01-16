@@ -1,6 +1,6 @@
 import * as cdk from "@aws-cdk/core";
 
-import { Stack, RemovalPolicy } from "@aws-cdk/core";
+import { Stack, RemovalPolicy, CfnOutput } from "@aws-cdk/core";
 import { WebsiteBucket } from "../constructs/static-hosting/hosting-bucket";
 import { BucketCdn } from "../constructs/static-hosting/cdn-for-s3";
 import { BucketPipeline } from "../constructs/pipeline/bucket-pipeline";
@@ -43,6 +43,10 @@ export class StaticWebsite extends Stack {
 
     const repo = new Repository(this, `repo`, {
       repositoryName: `${id}-repo`,
+    });
+
+    new CfnOutput(this, "Source Repo URL", {
+      value: repo.repositoryCloneUrlSsh,
     });
 
     new BucketPipeline(this, "devCICD", {
