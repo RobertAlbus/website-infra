@@ -4,6 +4,7 @@ import { Stack, RemovalPolicy } from "@aws-cdk/core";
 import { WebsiteBucket } from "../constructs/static-hosting/hosting-bucket";
 import { BucketCdn } from "../constructs/static-hosting/cdn-for-s3";
 import { BucketPipeline } from "../constructs/pipeline/bucket-pipeline";
+import { Repository } from "@aws-cdk/aws-codecommit";
 
 // https://dev.to/ryands17/deploying-a-spa-using-aws-cdk-typescript-4ibf
 
@@ -40,12 +41,22 @@ export class StaticWebsite extends Stack {
 
     // Pipeline
 
-    new BucketPipeline(this, "CICD", {
-      devBranch: props.devBranch,
-      prodBranch: props.prodBranch,
+    const repo = new Repository(this, `repo`, {
+      repositoryName: `${id}-repo`,
+    });
+
+    new BucketPipeline(this, "devCICD", {
+      repo: repo,
+      branch: props.devBranch,
       buildSpecFileLocation: props.buildSpecFileLocation,
-      devBucket: devBucket.bucket,
-      prodBucket: prodBucket.bucket,
+      bucket: devBucket.bucket,
+    });
+
+    new BucketPipeline(this, "prodCICD", {
+      repo: repo,
+      branch: props.prodBranch,
+      buildSpecFileLocation: props.buildSpecFileLocation,
+      bucket: prodBucket.bucket,
     });
   }
 }

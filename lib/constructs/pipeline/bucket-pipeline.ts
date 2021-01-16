@@ -1,11 +1,6 @@
 import { BuildSpec, PipelineProject } from "@aws-cdk/aws-codebuild";
 import { Repository } from "@aws-cdk/aws-codecommit";
-import {
-  Artifact,
-  Pipeline,
-  IAction,
-  StageProps,
-} from "@aws-cdk/aws-codepipeline";
+import { Artifact, Pipeline, StageProps } from "@aws-cdk/aws-codepipeline";
 import {
   CodeBuildAction,
   CodeCommitSourceAction,
@@ -17,52 +12,43 @@ import { Construct } from "@aws-cdk/core";
 import { WebsiteBucket } from "../static-hosting/hosting-bucket";
 
 export type BucketPipelineProps = {
-  devBucket: Bucket;
-  prodBucket: Bucket;
+  bucket: Bucket;
   buildSpecFileLocation: string;
-  devBranch?: string;
-  prodBranch?: string;
+  branch?: string;
+  repo?: Repository;
 };
 export class BucketPipeline extends Construct {
+  repo: Repository;
+
   constructor(scope: Construct, id: string, props?: BucketPipelineProps) {
     super(scope, id);
     props = props || {
       buildSpecFileLocation: "buildspec.yaml",
-      devBucket: new WebsiteBucket(scope, "dev-bucket").bucket,
-      prodBucket: new WebsiteBucket(scope, "prod-bucket").bucket,
+      bucket: new WebsiteBucket(scope, "bucket").bucket,
     };
 
-    props.prodBranch = props.devBranch || "dev";
-    props.prodBranch = props.prodBranch || "main";
+    props.branch = props.branch || "main";
+    props.repo =
+      props.repo ||
+      new Repository(scope, `repo`, {
+        repositoryName: `${id}-repo`,
+      });
 
-    // REPO
-
-    const repo = new Repository(this, `repo`, {
-      repositoryName: `${id}-repo`,
-    });
+    this.repo = props.repo;
 
     // SOURCE
 
-    const devSourceOutput = new Artifact(`dev-source-artifact`);
-    const prodSourceOutput = new Artifact(`prod-source-artifact`);
-
-    const devBuildOutput = new Artifact(`dev-build-output`);
-    const prodBuildOutput = new Artifact(`prod-build-output`);
+    const sourceOutput = new Artifact(`source-artifact`);
+    const buildOutput = new Artifact(`build-artifact`);
 
     const SourceAction: StageProps = {
       stageName: "Source",
       actions: [
         new CodeCommitSourceAction({
-          branch: props.devBranch,
-          actionName: "dev-source",
-          repository: repo,
-          output: devSourceOutput,
-        }),
-        new CodeCommitSourceAction({
-          branch: props.prodBranch,
-          actionName: "prod-source",
-          repository: repo,
-          output: prodSourceOutput,
+          branch: props.branch,
+          actionName: "codecommit",
+          repository: props.repo,
+          output: sourceOutput,
         }),
       ],
     };
@@ -77,16 +63,10 @@ export class BucketPipeline extends Construct {
       stageName: "Build",
       actions: [
         new CodeBuildAction({
-          actionName: "dev-build",
+          actionName: "build",
           project: buildFromSpec,
-          input: devSourceOutput,
-          outputs: [devBuildOutput],
-        }),
-        new CodeBuildAction({
-          actionName: "prod-build",
-          project: buildFromSpec,
-          input: prodSourceOutput,
-          outputs: [prodSourceOutput],
+          input: sourceOutput,
+          outputs: [buildOutput],
         }),
       ],
     };
@@ -98,13 +78,8 @@ export class BucketPipeline extends Construct {
       actions: [
         new S3DeployAction({
           actionName: "dev-deploy",
-          bucket: props.devBucket,
-          input: devBuildOutput,
-        }),
-        new S3DeployAction({
-          actionName: "prod-deploy",
-          bucket: props.prodBucket,
-          input: prodBuildOutput,
+          bucket: props.bucket,
+          input: buildOutput,
         }),
       ],
     };
@@ -120,12 +95,7 @@ export class BucketPipeline extends Construct {
     pipeline.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        resources: [
-          props.devBucket.bucketArn,
-          props.prodBucket.bucketArn,
-          `${props.devBucket.bucketArn}/*`,
-          `${props.prodBucket.bucketArn}/*`,
-        ],
+        resources: [props.bucket.bucketArn, `${props.bucket.bucketArn}/*`],
         actions: [
           "s3:GetBucket*",
           "s3:List*",
