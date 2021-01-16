@@ -36,8 +36,17 @@ export class StaticWebsite extends Stack {
       removalPolicy: props.bucketRemovalPolicy,
     });
 
-    new BucketCdn(this, `dev-cdn`, { bucket: devBucket.bucket });
-    new BucketCdn(this, `prod-cdn`, { bucket: prodBucket.bucket });
+    const devCdn = new BucketCdn(this, `dev-cdn`, { bucket: devBucket.bucket });
+    const prodCDN = new BucketCdn(this, `prod-cdn`, {
+      bucket: prodBucket.bucket,
+    });
+
+    new CfnOutput(this, "Dev CDN", {
+      value: devCdn.distribution.distributionDomainName,
+    });
+    new CfnOutput(this, "ProdCDN", {
+      value: prodCDN.distribution.distributionDomainName,
+    });
 
     // Pipeline
 
